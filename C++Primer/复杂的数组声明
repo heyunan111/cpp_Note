@@ -1,0 +1,10 @@
+int *ptrs[10]; ptrs是含有10个int型指针的数组
+int &refs[10];错误，不存在引用数组
+int (*Parray)[10];Parray 指向 一个含有10个整数的数组
+int (&arrRef)[10];arrRef 引用 一个含有10个整数的数组
+
+eg: int *(&arry)[10] = ptrs;
+首先，arry是一个引用，因为&arry，其次是引用的对象是一个大小为10的数组因为：[10]，
+数组中元素的类型是指向int的指针，因为：int *
+
+综上，arr是一个含有10个int型指针的数组的引用

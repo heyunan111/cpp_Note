@@ -24,7 +24,7 @@
         const int *k = i;
 
 显示转换:
-命名的强制转换：
+命名的强制转换： 尽可能避免强制类型转换
     cast-name<type>(expression);
     type目标类型，如果type是引用类型则结果是左值
     expression要转换的值 
@@ -45,6 +45,9 @@
     如果变量本身不是一个const，这样做是合法的
     如果变量本身是一个const，这样做会产生未知后果
     
+    只有const_cast能改变常量的属性，但不能用来改变表达式的属性
+
+    reinterpret_cast:通常为运算对象的位模式提供较低层次上的重新解释。（不建议使用）
 
 
 

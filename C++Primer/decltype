@@ -5,3 +5,12 @@ const int a = 10, & b = a;
 decltype(a) a1 = 20;  a1:const int类型
 decltype(b) b1 = a1;  b1:const int & 类型
 decltype((a)) a2 = a1; a2:const int & 注意括号的使用
+
+练习：
+int a = 3, b = 4;
+	decltype(a) c = a; c是int
+	decltype((b)) d = a;d: int &
+	++c; ++d;
+	cout << a << endl << b << endl << c << endl << d << endl;
+结果：
+4，4，4，4

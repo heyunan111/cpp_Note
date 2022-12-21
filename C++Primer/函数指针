@@ -1,0 +1,27 @@
+bool (*pf)(const string & ,const string & );
+bool len(const string &,const string&);
+
+pf = len 等价于 pf = &len
+bool b1 = pf("qq","qq") 等价 bool b2 = (*pf)("qq","qq")
+
+重载函数的指针：
+    void ff(int *);
+    void ff(unsigned int);
+
+    void (*pf)(unsigned) = ff;
+
+
+编写函数的声明，令其接受两个int形参并返回类型也是int；然后声明一个vector对象，
+令其元素是指向该函数的指针
+int a (int ,int);
+vector<decltype(a)*> b;
+
+编写4个函数，分别对两个int值执行加、减、乘、除运算；在上一题创建的vector对象中
+保存指向这些函数的指针。
+
+int add(int a,int b){return a+b;}
+int subtract(int a, int b) { return a - b; }
+int multiply(int a, int b) { return a * b; }
+int divide(int a, int b) { return b != 0 ? a / b : 0; }
+
+b.push_back(add);

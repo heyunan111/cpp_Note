@@ -19,6 +19,38 @@ unordered_multiset
 
 key_type 容器关键字类型
 mapped_type 关键字关联的类型
-
 value_type 对于set：key_type
             对于map: pair<const key_type,const value_type>
+
+insert（or emplace）的返回值：
+    返回一个pair
+                first:迭代器，指向具有给定关键字的元素。
+                second:bool,指出插入成功还是已经存在
+
+
+multimap or multiset :
+    查找元素：
+        multimap<int,int> map;
+        auto c = map.count(1);
+        auto it = map.find(1);
+        while(c) {
+            cout<<it->second<<endl;
+            ++it;
+            --c;
+        }
+
+
+        or :
+
+
+        for (auto beg = map.lower_bound(1),auto end = map.upper_bond(1);beg != end;++beg)
+            cout<<beg->second>>endl;
+        
+        注 ：如果关键字不在容器中lower_bound,upper_bond返回相同的迭代器（不一定为end）
+
+        or :
+
+
+        for (auto pos = map.equal_range(1);pos.first != pos.second;++pos.first)
+            cout<<pos.first->second<<endl;
+        如果未找到，first和second返回相同的迭代器

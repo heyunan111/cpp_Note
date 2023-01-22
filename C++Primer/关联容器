@@ -17,3 +17,8 @@ unordered_multiset
     multimap<Sales_data,decltype(comp)*> bookstore(comp);
     比较操作的类型是一种函数指针类型
 
+key_type 容器关键字类型
+mapped_type 关键字关联的类型
+
+value_type 对于set：key_type
+            对于map: pair<const key_type,const value_type>

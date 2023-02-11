@@ -1,0 +1,5 @@
+#include<type_traits>
+获得元素类型
+对于 remove_reference<T>
+若 T为 X&&/X& 则 remove_reference<T>::type 为 X
+否则 remove_reference<T>::type 为 T

@@ -1,0 +1,68 @@
+三次握手：
+状态        主动        被动
+CLOSE       
+            ------->SYN
+SYNSEND
+            SYN,ACK<-------  
+SYNSEND     
+            ------->ACK
+ESTABLISHED
+
+主动发起连接请求端:CLOSE->发送SYN->SEND_SYN->接收ACK,SYN-->SEND_SYN-->发送ACK-->ESTABLISHED(数据通信态)
+
+四次挥手:
+状态        主动        被动
+ESTABLISHED
+            -------->FIN
+FIN_WAIT_1
+            ACK<---------
+FIN_WAIT_2(半关闭)
+            FIN<----------
+FIN_WAIT_2
+            --------->ACK
+TIME_WAIT(不代表成功关闭，可能超时)
+    |
+    V
+2MSL(时长)
+    |
+    V
+CLOSE
+
+主动发起关闭请求端:ESTABLISHED-->发送FIN->FIN_WAIT_1-->接收ACK-->FIN_WAIT_2-->接收FIN-->FIN_WAIT_2-->回发ACK-->TIME_WAIT(只有主动关闭一方会等待)-->等2MSL-->CLOSE
+
+[hyn@localhost ~]$  netstat -apn | grep 9090
+(Not all processes could be identified, non-owned process info
+ will not be shown, you would have to be root to see it all.)
+tcp        0      0 0.0.0.0:9090            0.0.0.0:*               LISTEN      3128/server         
+[hyn@localhost ~]$  netstat -apn | grep 9090
+(Not all processes could be identified, non-owned process info
+ will not be shown, you would have to be root to see it all.)
+tcp        0      0 0.0.0.0:9090            0.0.0.0:*               LISTEN      3128/server         
+tcp        0      0 127.0.0.1:9090          127.0.0.1:40878         ESTABLISHED 3128/server         
+tcp        0      0 127.0.0.1:40878         127.0.0.1:9090          ESTABLISHED 3395/cli            
+[hyn@localhost ~]$  netstat -apn | grep 9090
+(Not all processes could be identified, non-owned process info
+ will not be shown, you would have to be root to see it all.)
+tcp        0      0 0.0.0.0:9090            0.0.0.0:*               LISTEN      3128/server         
+tcp        0      0 127.0.0.1:9090          127.0.0.1:40878         ESTABLISHED 3128/server         
+tcp        0      0 127.0.0.1:40878         127.0.0.1:9090          ESTABLISHED 3395/cli            
+tcp        0      0 127.0.0.1:39316         127.0.0.1:9090          ESTABLISHED 3604/cli            
+tcp        0      0 127.0.0.1:9090          127.0.0.1:39316         ESTABLISHED 3128/server         
+[hyn@localhost ~]$  netstat -apn | grep 9090
+(Not all processes could be identified, non-owned process info
+ will not be shown, you would have to be root to see it all.)
+tcp        0      0 0.0.0.0:9090            0.0.0.0:*               LISTEN      3128/server         
+tcp        0      0 127.0.0.1:9090          127.0.0.1:40878         ESTABLISHED 3128/server         
+tcp        0      0 127.0.0.1:40878         127.0.0.1:9090          ESTABLISHED 3395/cli            
+tcp        0      0 127.0.0.1:39316         127.0.0.1:9090          TIME_WAIT   -                   
+[hyn@localhost ~]$  netstat -apn | grep 9090
+(Not all processes could be identified, non-owned process info
+ will not be shown, you would have to be root to see it all.)
+tcp        0      0 0.0.0.0:9090            0.0.0.0:*               LISTEN      3128/server         
+tcp        0      0 127.0.0.1:40878         127.0.0.1:9090          TIME_WAIT   -                   
+tcp        0      0 127.0.0.1:39316         127.0.0.1:9090          TIME_WAIT   -                   
+[hyn@localhost ~]$  netstat -apn | grep 9090
+(Not all processes could be identified, non-owned process info
+ will not be shown, you would have to be root to see it all.)
+tcp        0      0 127.0.0.1:40878         127.0.0.1:9090          TIME_WAIT   -                   
+tcp        0      0 127.0.0.1:39316         127.0.0.1:9090          TIME_WAIT

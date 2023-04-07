@@ -1,0 +1,124 @@
+一个文件描述符指向一个socket（该socket内部由内核借助两个缓冲区实现）
+在通信过程中，socket一定是成对出现的
+
+网络字节序：
+      小端法：高位存高地址，低位存低地址 （本地字节序）
+      大端法：高位存低地址，低位高地址。（网络字节序）
+htonl(host(本地) to nl(net long)); IP
+htons(host(本地) to ns(net short));port
+ntohl(net long to host(本地));IP
+ntohs(net short to host(本地));port
+
+IP地址转换
+ int inet_pton(int af,const char* src,void *dst) 本地字节序转换为网络字节序
+ af:AF_INET,AF_INET6
+ src:传入，IP地址（点分十进制）
+ dst，传出，转换后的IP地址的内容（字节数组）
+ 成功返回 1
+ 如果src不是有效的IP地址，则返回 0
+ 返回-1，失败
+
+ int inet_ntop (int af,const void* src,char *dst,socklen_t size) 网络字节序转换为本地字节序
+ af:AF_INET,AF_INET6
+ src:传入，网络字节序IP地址
+ dst，传出，本地字节序（string）
+成功返回 dst
+失败返回null
+
+sockaddr 
+    [16位地址类型   ]
+    [14字节地址数据 ]
+    [              ]
+    [              ]
+scokaddr_in
+    [16位地址类型   ]
+    [16位端口号     ]
+    [32位Ip地址     ]
+    [8字节填充      ]
+
+
+TCP客户端：
+ scoket()
+    |
+    V
+ connet()  绑定连接IP和端口号的TCP服务器。 连接成功返回fileno(conn_fd)，失败返回-1。
+    |
+    V
+ write()
+    |
+    V
+ read()
+    |
+    V
+ close()
+
+
+
+ TCP服务端：
+ scoket()
+    |
+    V
+ bind()     绑定IP+port
+    |
+    V
+ listen()   设置同时监听上限
+    |
+    V
+ accept()   阻塞监听客户端连接，直到客户端连接成功或发送了一个“请求”或发送了一个“错误”
+    |
+    V
+ read()     读取客户端数据
+    |
+    V
+ write()    给客户端发送一个“请求”或发送一个“错误”
+    |
+    V
+ read()
+    |
+    V
+ close()
+
+
+int socket(int domain, int type, int protocol); 
+domain:AF_INET,AF_INET6
+type:SOCK_STREAM,SOCK_DGRAM,SOCK_RAW,SOCK_RDM,SOCK_SEQP
+protocol:0(自动),IPPROTO_TCP,IPPROTO_UDP,IPPROTO_RAW,etc. 或者自定义。
+返回值：成功返回新socket对应的fd,失败返回-1。 在没有可用连接的情况下，关闭fd。 
+
+bind(int sockfd,const struct sockaddr * addr,socklen_t addrlen); 
+ 描述：将监听 socket 指向的地址结构。 addr 是一个指向地址结构的数组的引用，
+ 或者是一个空的 sockaddr 结构引用。 addrlen 是 addr 的长度。在加入多个监
+ 听 socket时，可以使用该值来控制是否使用多个监听 socket。
+ sockfd:sockt函数返回值
+ sockaddr_in addr;
+ addr.sin_familr = AF_INET;
+ addr.sin_port = htos(8888);
+ addr.sin_addr.s_addr = INADDR_ANY; 
+ bind(int sockfd,(cosnt sockaddr*)&addr,sizeof(addr))
+ 返回值：成功返回新socket对应的fd,失败返回-1。
+
+int listen(int sockfd,int backlog)
+ sockfd:sockt函数返回值
+ backlog:请求队列的长度。最大值为128。
+ 返回值：成功返回新socket对应的fd,失败返回-1。
+
+int accept(int sockfd,sockaddr *addr,socklen_t *addrlen);
+ 阻塞监听客户端连接，成功的话返回一个与客户端连接成功的socket
+ scokfd:sockt函数返回值
+ addr:传出参数。传出成功与服务器建立连接的客户端的地址结构(IP + port)
+   scoklen_t clit_addr_len = sizeof(addr);
+   addrlen: &clit_addr_len;
+ 传入传出addr的长度(地址结构的长度)。 传入：addr的大小，传出：客户端addr的实际大小
+ 返回值：
+      非负整数：
+         成功：能与服务器进行数据通信的socket对应的文件描述符
+         失败：-1。
+
+int connect(int sockfd, const struct sockaddr *addr,socklen_t addrlen);
+ 使用现有的socket与服务器建立连接
+ sockfd:sockt函数返回值
+ addr:传入，服务器地址结构
+ addrlen:服务器地址长度
+ 返回值：成功返回新socket对应的fd,失败返回-1。
+
+ 如果不使用bind绑定客户端地址结构，采用隐士绑定

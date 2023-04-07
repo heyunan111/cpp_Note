@@ -1,0 +1,89 @@
+一个文件描述符指向一个socket（该socket内部由内核借助两个缓冲区实现）
+在通信过程中，socket一定是成对出现的
+
+网络字节序：
+      小端法：高位存高地址，低位存低地址 （本地字节序）
+      大端法：高位存低地址，低位高地址。（网络字节序）
+htonl(host(本地) to nl(net long)); IP
+htons(host(本地) to ns(net short));port
+ntohl(net long to host(本地));IP
+ntohs(net short to host(本地));port
+
+IP地址转换
+ int inet_pton(int af,const char* src,void *dst) 本地字节序转换为网络字节序
+ af:AF_INET,AF_INET6
+ src:传入，IP地址（点分十进制）
+ dst，传出，转换后的IP地址的内容（字节数组）
+ 成功返回 1
+ 如果src不是有效的IP地址，则返回 0
+ 返回-1，失败
+
+ int inet_ntop (int af,const void* src,char *dst,socklen_t size) 网络字节序转换为本地字节序
+ af:AF_INET,AF_INET6
+ src:传入，网络字节序IP地址
+ dst，传出，本地字节序（string）
+成功返回 dst
+失败返回null
+
+sockaddr 
+    [16位地址类型   ]
+    [14字节地址数据 ]
+    [              ]
+    [              ]
+scokaddr_in
+    [16位地址类型   ]
+    [16位端口号     ]
+    [32位Ip地址     ]
+    [8字节填充      ]
+
+struct sockaddr_in addr;
+
+addr.sin_familr = AF_INET;
+addr.sin_addr.s_addr = htonl(INADDR_ANY)；  //取出系统中有效的任意IP地址 IP地址 0.0.0.0 ~ INADDR_BROADCAST
+addr.sin_port = htons(12345);               //Port number 0..65535 (0 is broadcast)
+
+bind(fd,(sockaddr*)&addr,sizeof(addr));
+
+TCP客户端：
+ scoket()
+    |
+    V
+ connet()
+    |
+    V
+ write()
+    |
+    V
+ read()
+    |
+    V
+ close()
+
+
+
+ TCP服务端：
+ scoket()
+    |
+    V
+ bind()
+    |
+    V
+ listen()
+ 
+    |
+    V
+ accept()
+    |
+    V
+ read()
+    |
+    V
+ write()
+    |
+    V
+ read()
+    |
+    V
+ close()
+
+ 

@@ -121,4 +121,92 @@ int connect(int sockfd, const struct sockaddr *addr,socklen_t addrlen);
  addrlen:服务器地址长度
  返回值：成功返回新socket对应的fd,失败返回-1。
 
- 如果不使用bind绑定客户端地址结构，采用隐士绑定
+ 如果不使用bind绑定客户端地址结构，采用隐式绑定
+
+
+
+
+server.cpp:
+
+#include<sys/socket.h>
+#include<netdb.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include<iostream>
+#include<assert.h>
+#include<string>
+#include<iostream>
+#include<cstring>
+#include<unistd.h>
+#include<fcntl.h>
+using namespace std;
+
+int main() {
+    int ser_sockfd = socket(AF_INET,SOCK_STREAM,0);
+    assert(ser_sockfd != -1);
+    sockaddr_in ser_addr;
+    ser_addr.sin_family = AF_INET;
+    ser_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    ser_addr.sin_port = htons(5005);
+    int bd = bind(ser_sockfd,(sockaddr*)&ser_addr,sizeof(ser_addr));
+    assert(bd != -1);
+    int ls = listen(ser_sockfd,5);
+    assert(ls!= -1);
+    sockaddr_in cli_addr;
+    socklen_t cli_addr_len = sizeof(cli_addr);
+    int cli_sockfd = accept(ser_sockfd,(sockaddr*)&cli_addr,&cli_addr_len);
+    assert(cli_sockfd!= -1);
+    char client_ip[1024];
+    cout<<"socket ip:"<<inet_ntop(AF_INET,&cli_addr.sin_addr.s_addr,client_ip,sizeof(client_ip))<<"prot:"<<
+    ntohs(cli_addr.sin_port)<<'\n';
+    while (true)
+    {
+        char buff[BUFSIZ];
+        int red = read(cli_sockfd,buff,sizeof(buff) );
+        std::cout<<"Message from client: "<<std::string(buff)<<std::endl;
+        for (size_t i = 0; i < red; i++)
+        {
+        buff[i] = toupper(buff[i]);
+        }
+        write(cli_sockfd,buff,red);
+    }
+    close(cli_sockfd);
+    close(ser_sockfd);
+    return 0;
+}
+
+
+client.cpp
+
+#include<sys/socket.h>
+#include<netdb.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include<iostream>
+#include<assert.h>
+#include<string>
+#include<iostream>
+#include<cstring>
+#include<unistd.h>
+#include<fcntl.h>
+
+int main() {
+    int sockfd = socket(AF_INET,SOCK_STREAM,0);
+    sockaddr_in addr;
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    addr.sin_port = htons(5005);
+    int conn = connect(sockfd,(sockaddr*)&addr,sizeof(addr));
+    assert(conn == 0);
+    
+    while (true)
+    {char buff[BUFSIZ];
+        std::cout << "Input a string: ";
+        std::cin >> buff;
+        send(sockfd,buff,strlen(buff),0);
+        recv(sockfd,buff,BUFSIZ,0);
+        std::cout << buff << std::endl;
+    }
+    close(sockfd);
+    return 0;
+}

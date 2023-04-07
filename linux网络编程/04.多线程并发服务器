@@ -1,0 +1,51 @@
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <thread>
+#include<iostream>
+#include <vector>
+#include "warp.h"
+
+using namespace std;
+
+void work(int fd) {
+    char buff[BUFSIZ];
+    while (true) {
+        int ret = recv(fd,buff, sizeof(buff),0);
+        if (ret == -1) {
+            cout<<"recv error\n";
+            break;
+        } else if (ret == 0) {
+            cout<<"client disconnected\n";
+            break;
+        } else {
+            cout<<"recv :"<<buff;
+            for (char & i : buff) {
+                i = static_cast<char>(::toupper(i));
+            }
+            send(fd,buff, sizeof(buff),0);
+        }
+    }
+    close(fd);
+}
+
+int main() {
+    int server_fd = Socket(AF_INET,SOCK_STREAM,0);
+    sockaddr_in addr{};
+    addr.sin_addr.s_addr = INADDR_ANY;
+    addr.sin_port = htons(9090);
+    addr.sin_family = AF_INET;
+
+    Bind(server_fd,(sockaddr*)&addr,sizeof(addr));
+
+    Listen(server_fd,5);
+    vector<thread> thread_pool;
+    while (true) {
+        sockaddr_in cli_addr{};
+        socklen_t cli_addr_len = sizeof(cli_addr);
+        int clifd = accept(server_fd,(sockaddr*)&cli_addr,&cli_addr_len);
+        char ip[16];
+        inet_ntop(AF_INET, &cli_addr.sin_addr.s_addr, ip, sizeof(ip));
+        cout<<"new client accept IP: "<<ip<<" port: "<<ntohs(cli_addr.sin_port)<<'\n';
+        thread_pool.emplace_back(work,clifd);
+    }
+}

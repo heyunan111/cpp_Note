@@ -38,7 +38,7 @@ scokaddr_in
 
 
 TCP客户端：
- scoket()
+ socket()
     |
     V
  connet()  绑定连接IP和端口号的TCP服务器。 连接成功返回fileno(conn_fd)，失败返回-1。
@@ -55,7 +55,7 @@ TCP客户端：
 
 
  TCP服务端：
- scoket()
+ socket()
     |
     V
  bind()     绑定IP+port

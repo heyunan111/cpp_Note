@@ -1,26 +1,27 @@
 三次握手：
-状态        主动        被动
-CLOSE       
-            ------->SYN
-SYNSEND
-            SYN,ACK<-------  
-SYNSEND     
+状态        主动        被动        状态
+CLOSE                            CLOSE-->LISTEN        
+            ------->SYN         
+SYNSEND                          LISTEN
+            SYN,ACK<-------      
+SYNSEND                          SYN_RCVD
             ------->ACK
-ESTABLISHED
+ESTABLISHED                      ESTABLISHED
 
-主动发起连接请求端:CLOSE->发送SYN->SEND_SYN->接收ACK,SYN-->SEND_SYN-->发送ACK-->ESTABLISHED(数据通信态)
+主动发起连接请求端:CLOSE->发送SYN->SEND_SYN->接收ACK,SYN->SEND_SYN->发送ACK-->ESTABLISHED(数据通信态)
+被动接收连接请求端:CLOSE->LISTEN->接收SYN->发送ACK，SYN->SYN_RCVD->接收ACK->ESTABLISHED
 
 四次挥手:
-状态        主动        被动
-ESTABLISHED
-            -------->FIN
-FIN_WAIT_1
+状态        主动        被动        状态
+ESTABLISHED                     ESTABLISHED
+            -------->FIN        
+FIN_WAIT_1                      ESTABLISHED
             ACK<---------
-FIN_WAIT_2(半关闭)
+FIN_WAIT_2(半关闭)               CLOSE_WAIT
             FIN<----------
-FIN_WAIT_2
+FIN_WAIT_2                      LAST_ACK
             --------->ACK
-TIME_WAIT(不代表成功关闭，可能超时)
+TIME_WAIT(不代表成功关闭，可能超时) CLOSE
     |
     V
 2MSL(时长)
@@ -28,7 +29,10 @@ TIME_WAIT(不代表成功关闭，可能超时)
     V
 CLOSE
 
-主动发起关闭请求端:ESTABLISHED-->发送FIN->FIN_WAIT_1-->接收ACK-->FIN_WAIT_2-->接收FIN-->FIN_WAIT_2-->回发ACK-->TIME_WAIT(只有主动关闭一方会等待)-->等2MSL-->CLOSE
+
+主动发起关闭请求端:ESTABLISHED->发送FIN->FIN_WAIT_1->接收ACK->FIN_WAIT_2->接收FIN->FIN_WAIT_2->回发ACK->TIME_WAIT(只有主动关闭一方会等待)->等2MSL->CLOSE
+被动接收关闭请求端:ESTABLISHED->接收FIN->发送ACK->CLOSE_WAIT->发送FIN->LAST_ACK->接收ACK->CLOSE
+
 
 [hyn@localhost ~]$  netstat -apn | grep 9090
 (Not all processes could be identified, non-owned process info

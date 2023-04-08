@@ -1,0 +1,10 @@
+ #include <sys/types.h>          /* See NOTES */
+#include <sys/socket.h>
+
+int getsockopt(int sockfd, int level, int optname,void *optval, socklen_t *optlen);
+
+int setsockopt(int sockfd, int level, int optname,const void *optval, socklen_t optlen);
+
+int opt = 0/1(生效或者失效)
+setsockopt(listen_fd,SOL_SOCKET,SO_REUSEADDR/SO_REUSEPORT,(void*)&opt,sizeof(opt));
+返回值：成功0，失败-1

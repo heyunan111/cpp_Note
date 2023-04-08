@@ -1,0 +1,88 @@
+poll:
+    优点：自带数组结构，可以将监听事件集合和返回事件集合分离，拓展监听上限
+    缺点：不能跨平台，无法直接定位满足监听事件的文件描述符，编码难度较大
+
+epoll：       #include <sys/epoll.h>
+    epoll是一个红黑树
+
+       int epoll_create(int size);
+       size:创建红黑树的监听节点数（没啥b用，仅供参考）
+       返回值:
+            指向新创建红黑树的根节点的fd
+            -1 失败
+
+       int epoll_ctl(int epfd, int op, int fd, struct epoll_event *event);
+       epfd:epoll_create的返回值，fd
+       op:对监听红黑树所作的操作
+            EPOLL_CTL_ADD:添加fd到监听红黑树
+            EPOLL_CTL_MOD:修改fd在监听红黑树上的监听事件
+            EPOLL_CTL_DEL:将一个fd从监听红黑树上去掉
+        fd:带监听的fd
+        event:
+            本质：epoll_event结构体地址
+                events:
+                    EPOLLIN 读事件
+                    EPOLLOUT写事件
+                    EPOLLERR错误
+                    struct epoll_event {
+                    uint32_t     events;      /* Epoll events */
+                    epoll_data_t data;        /* User data variable */
+                    };
+                data:联合体：
+                    typedef union epoll_data {
+                    void        *ptr;
+                    int          fd; 对应监听事件的fd
+                    uint32_t     u32;
+                    uint64_t     u64;
+                    } epoll_data_t;
+        返回值：成功0，失败-1
+
+        int epoll_wait(int epfd, struct epoll_event *events,int maxevents, int timeout)
+            epfd:epoll_create的返回值，fd
+            events:[数组]，传出：满足监听条件的fd结构体
+            maxevents:数组元素的总个数，1024
+                epoll_event events[1024];
+            timeout:超时时间
+                    -1:阻塞
+                    0：不阻塞
+                    >0:超时时间（毫秒）
+            返回值：
+                >0：满足监听的总个数，可以用作循环上限
+                0：没有fd满足监听事件
+                -1：失败
+        
+epoll实现多路IO转接：
+    lfd = socket();
+
+    bind();
+
+    listen();
+
+    int epfd = epoll_create(1024);
+
+    epoll_event temp_ep_fd (用来设置单个fd属性) ,ep[1024] (epoll_wait传出满足监听事件的数组);
+    temp_ep_fd.events = EPOLLIN;    初始化lfd的监听属性
+    temp_ep_fd.data.fd = lfd;
+
+    epoll_ctl(epfd,EPOLL_CTL_ADD,lfd,&temp_ep_fd);
+    
+    while(true) {
+        ret = epoll_wait(epfd,ep,1024,-1);
+        for (i = 0; i < ret; ++i) {
+            if (ep[i].data.fd == lfd) {//lfd满足读事件，有新的客户端发起连接请求
+                cfd = accept();
+                temp_ep_fd.events = EPOLLIN; 初始化cfd的属性
+                temp_ep_fd.data.fd = cfd;  
+                epoll_ctl(epfd,EPOLL_CTL_ADD,cfd,&temp_ep_fd);
+            } else { cfd们满足读事件，有客户端写数据
+                n = read();
+                if (n == 0) {
+                    close(ep[i].data.fd);
+                    epoll_ctl(epfd,EPOLL_CTL_DEL,cfd,nullptr);将关闭的cfd从监听树上删除
+                } else if(n>0) {
+                    do some thing;
+                }
+            }
+        }
+    }
+    

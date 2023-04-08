@@ -2,7 +2,11 @@ poll:
     优点：自带数组结构，可以将监听事件集合和返回事件集合分离，拓展监听上限
     缺点：不能跨平台，无法直接定位满足监听事件的文件描述符，编码难度较大
 
-epoll：       #include <sys/epoll.h>
+epoll：
+    优点：高效。
+    缺点：不能跨平台
+
+    #include <sys/epoll.h>
     epoll是一个红黑树
 
        int epoll_create(int size);
@@ -86,3 +90,70 @@ epoll实现多路IO转接：
         }
     }
     
+
+
+
+
+
+
+    int main() {
+    int server_fd = Socket(AF_INET,SOCK_STREAM,0);
+    sockaddr_in addr{};
+    addr.sin_addr.s_addr = INADDR_ANY;
+    addr.sin_port = htons(9090);
+    addr.sin_family = AF_INET;
+
+    Bind(server_fd,(sockaddr*)&addr,sizeof(addr));
+
+    Listen(server_fd,5);
+
+    epoll_event temp_ep_fd{},ep[1024];
+    int epfd = epoll_create(5000);
+    temp_ep_fd.events = EPOLLIN;
+    temp_ep_fd.data.fd = server_fd;
+    int res = epoll_ctl(epfd,EPOLL_CTL_ADD,server_fd,&temp_ep_fd);
+    if (res == -1)
+        cout<<"error epoll_ctl\n";
+    char buff[BUFSIZ];
+    for (;;) {
+        res = epoll_wait(epfd,ep,1024,-1);
+        for (int i = 0; i < res; ++i) {
+            if (ep[i].data.fd == server_fd) {
+                sockaddr_in client_addr{};
+                socklen_t client_addr_len = sizeof(client_addr);
+                int client_fd = accept(server_fd,(sockaddr*)&client_addr,&client_addr_len);
+                char client_ip[16];
+                inet_ntop(AF_INET,&client_addr.sin_addr.s_addr,client_ip, sizeof(client_ip));
+                cout<<"client connection IP : "<<client_ip<<" port: "<<ntohs(client_addr.sin_port)<<'\n';
+                temp_ep_fd.events = EPOLLIN;
+                temp_ep_fd.data.fd = client_fd;
+                epoll_ctl(epfd,EPOLL_CTL_ADD,client_fd,&temp_ep_fd);
+            } else {
+                bzero(&buff,sizeof(buff));
+                int n = recv(ep[i].data.fd,buff,sizeof(buff),0);
+                if (n == 0) {
+                    res = epoll_ctl(epfd,EPOLL_CTL_DEL,ep[i].data.fd, nullptr);
+                    close(ep[i].data.fd);
+                    cout<<"client "<<ep[i].data.fd<<"close connection \n";
+                } else if (n < 0) {
+                    cout<<"read error\n";
+                    res = epoll_ctl(epfd,EPOLL_CTL_DEL,ep[i].data.fd, nullptr);
+                    close(ep[i].data.fd);
+                } else {
+                    int o = 0;
+                    cout<<"read:";
+                    for (char & k : buff) {
+                        cout<<k;
+                        k = static_cast<char>(::toupper(i));
+                    }
+                    cout<<'\n';
+                    int se = send(ep[i].data.fd,buff, sizeof(buff),0);
+                    if (se < 0)
+                        cout<<"send error";
+                }
+
+            }
+        }
+    }
+    close(server_fd);
+}

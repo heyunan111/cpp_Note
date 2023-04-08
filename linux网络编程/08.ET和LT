@@ -1,0 +1,18 @@
+ET 模式：只在文件描述符状态发生变化时通知应用程序，也就是只在发生状态变化时触发一次事件。
+在 ET 模式下，应用程序需要读取所有可读数据，直到收到 EAGAIN 为止。这种模式通常适用于需要
+读取较大数据块的场景，以避免出现数据被分割的情况。高效模式，只支持非阻塞模式。
+    边沿触发：
+        缓冲区剩余未读尽的数据不会导致epoll_wait返回，新的事件满足，才会触发
+        epoll_event event;
+        event.events = EPOLLIN | EPOLLET
+    修改非阻塞模式
+        int fd = accept()
+        flag = fcntl(fd,F_GETFL);
+        flag |= O_NONBLOCK;
+        fcntl(fd,F_SETFL,flag);
+
+LT 模式：只要文件描述符处于可读、可写或错误状态，就会持续通知应用程序，也就是只要状态没有
+发生变化，事件就会持续触发。在 LT 模式下，应用程序只需要读取一次数据就可以了。
+    水平触发：（默认）
+        缓冲区剩余未读尽的数据会导致epoll_wait返回
+同时支持block 和 non-block 

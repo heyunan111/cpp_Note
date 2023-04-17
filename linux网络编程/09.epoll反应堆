@@ -1,0 +1,15 @@
+epoll ET模式 + 非阻塞 + void *ptr 
+
+原来：
+    socket,bind,listen->epoll_create创建红黑树->返回epfd->epoll_ctl向树上添加一个监听
+    fd->while(true)->epoll_wait监听->对应fd有事件发生->返回监听满足数组->判断数组元素->
+    lfd满足->accept->cfd满足->read->do some thing
+
+反应堆： 不但要监听cfd的读事件，还要监听cfd的写事件
+
+    socket,bind,listen->epoll_create创建红黑树->返回epfd->epoll_ctl向树上添加一个监听
+    fd->while(true)->epoll_wait监听->对应fd有事件发生->返回监听满足数组->判断数组元素->
+    lfd满足->accept->cfd满足->read->do some thing->cfd从监听树上去掉->epoll_ctl监听
+    cfd的写事件->EPOLLOUT->回调函数->epoll_ctl->EPOLL_CTL_ADD重新放到红黑树上监听写事件
+    ->等待epoll_Wait返回->说明cfd可写->do some thing->cfd从监听树上去掉->EPOLLIN->epoll_ctl->
+    epoll_ctl->EPOLL_CTL_ADD重新放到红黑树上监听写事件->epoll_wait监听

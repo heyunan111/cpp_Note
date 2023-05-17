@@ -1,0 +1,18 @@
+cmake_minimum_required(VERSION 3.2.0)
+project(main LANGUAGES C CXX)
+
+#if(NOT CMAKE_BUILD_TYPE)
+#    set(CMAKE_BUILD_TYPE Release)
+#endif()
+
+set(CMAKE_BUILD_TYPE Release/Dbug/MinSizeRel/RelWithDebInfo)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF) //gcc独有特性，关闭以兼容MSVC
+
+add_executable(main)
+aux_source_directory(. sources)
+aux_source_directory(include sources)
+
+target_sources(main ${sources})

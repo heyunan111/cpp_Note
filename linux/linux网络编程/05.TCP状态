@@ -30,7 +30,8 @@ TIME_WAIT(不代表成功关闭，可能超时) CLOSE
 CLOSE
 
 
-主动发起关闭请求端:ESTABLISHED->发送FIN->FIN_WAIT_1->接收ACK->FIN_WAIT_2->接收FIN->FIN_WAIT_2->回发ACK->TIME_WAIT(只有主动关闭一方会等待)->等2MSL->CLOSE
+主动发起关闭请求端:ESTABLISHED->发送FIN->FIN_WAIT_1->接收ACK->FIN_WAIT_2->接收FIN->FIN_WAIT_2->回发ACK->TIME_WAIT
+(只有主动关闭一方会等待)->等2MSL->CLOSE
 被动接收关闭请求端:ESTABLISHED->接收FIN->发送ACK->CLOSE_WAIT->发送FIN->LAST_ACK->接收ACK->CLOSE
 
 

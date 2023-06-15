@@ -1,0 +1,16 @@
+序列容器：
+    1.array（C++11）
+    2.vector
+    3.deque
+    4.list（双向循环链表）
+    5.forard_list(C++11，单向链表)
+
+    slist gcc提供，单向链表
+
+关联容器：使用红黑树实现
+    1.set/multiset 
+    2.map/multimap
+
+无序容器：使用 Separate Chaining Hash Table实现
+    1.unordered_set/unordered_multiset
+    2.unordered_map/unordered_multimap

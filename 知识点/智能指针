@@ -1,0 +1,67 @@
+C++中有四种智能指针:unique_ptr,shared_ptr,weak_ptr,auto_ptr(c++11中被删除)
+
+删除器： unique_ptr shared_ptr 可以自定义删除器，默认删除器就是delete
+unique_ptr 的删除器是指针的一部分，这意味着我们无法将指向相同类型但删除器不同的unique_ptr放在同一个
+容器内
+shared_ptr 的删除器是放在控制块中的，我们可以将指向相同类型但是删除器不同的shared_ptr放在同一个容器内
+
+unique_ptr:实现独占拥有，同一时间内只有一个智能指针指向该对像。
+他的开销十分接近原生指针，大小也和原生指针相同
+他的实现非常简单，仅仅包含一个成员变量：指向资源的指针和删除器的pair
+他在析构的时候调用reset，reset中调用了删除器释放资源
+unique_ptr的实现并不保证线程安全，但是他通常是线程安全的，因为他独占资源
+
+shared_ptr:实现共享拥有，对象会在最后一个拥有该对象的指针被销毁后释放。
+他的大小是原生指针的两倍，因为他内部包含了两个指针，一个指向资源，一个指向控制块
+控制块中包含了：引用计数，weak计数，还有一些其他东西：比如删除器，空间适配器等。
+shared_ptr是线程安全的，但是他并不保证他所指向的资源线程安全。
+线程安全是指他的引用计数是线程安全的，由原子操作来保证线程安全性，但是并不是简单的将他设置为一个atomic，
+因为要保证在非并发情况下的性能，他是通过一系列复杂的操作来实现的
+关于控制块，在三种情况下一定会构造控制块：
+    1.当从原始指针构造时
+    2.使用make_shared
+    3.从独占指针构造，即 unique_ptr auto_ptr
+这意味着当我们从原始指针构造超过一个 shared_ptr 时会走上未定义行为的快车道
+通常情况下控制块是动态分配的，除了使用make shared的时候。
+通常情况下我们使用*this来构造shared ptr是错误的，他会导致未定义行为，应该使用 enable_shared_from_this
+
+
+weak_ptr:不控制对象的生命周期，它指向一个 shared_ptr 对象。
+他是用来配和 shared_ptr 工作的，它可以由 shared_ptr 或者 weak_ptr 构造而成
+实现上他和 shared_ptr 使用一个基类，只不过他没有重载解引用运算符，所以我们无法直接使用他，所以他的大小和 shared_ptr 相同
+他提供了一个来检查 shared_ptr 是否过期的原子操作，通常使用它来替代可能会悬空的 shared_ptr
+他也可用来解决两个 shared_ptr 相互引用的死锁问题
+最后，我们可以通过 weak_ptr 来构造 shared_ptr
+
+make_unique:在C++14中引入，make_shared，allocate_shared:在C++11中引入
+
+和直接使用new相比，make函数消除了代码重复，提高了异常安全性。对于std::make_shared和std::allocate_shared，
+生成的代码更小更快。
+std::make_shared的一个特性（与直接使用new相比）是效率提升。使用std::make_shared允许编译器生成更小，
+更快的代码，并使用更简洁的数据结构
+std::make_shared分配一块内存，同时容纳了Widget对象和控制块。这种优化减少了程序的静态大小，因为代码只
+包含一个内存分配调用，并且它提高了可执行代码的速度，因为内存只分配一次
+
+不适合使用make函数的情况包括 需要指定自定义删除器和希望用花括号初始化。
+
+对于std::shared_ptr s，其他不建议使用make函数的情况包括
+    (1)有自定义内存管理的类；
+    (2)特别关注内存的系统，非常大的对象，以及std::weak_ptr s比对应的std::shared_ptr s活得更久。
+
+
+std::allocate_shared 允许手动分配内存用于对象和控制块。
+首先使用 allocator 分配内存，然后使用定位 new 在分配的内存上构造对象。
+接下来，创建控制块并与对象相关联。
+这种方式相对于 std::make_shared 会有额外的内存分配和构造开销。
+使用 std::allocate_shared 需要提供 allocator 对象作为参数。
+
+make_unique 的实现非常简单，一下是一个基础实现版
+
+template<typename T, typename... Ts>
+std::unique_ptr<T> make_unique(Ts&&... params)
+{
+    return std::unique_ptr<T>(new T(std::forward<Ts>(params)...));
+}
+
+make_unique只是将它的参数完美转发到所要创建的对象的构造函数，从new产生的原始指针里面构造出
+std::unique_ptr，并返回这个std::unique_ptr

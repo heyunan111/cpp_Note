@@ -1,9 +1,0 @@
-template <typename T>
-typename T::value_type yop (const T& c) {
-    if (!c.empty)
-        return c.back();
-    else 
-        return typename T::value_type();
-}
-
-编译器通过typename来识别T是一个类型

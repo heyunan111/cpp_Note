@@ -1,3 +1,0 @@
-long long x = 65536LL;
-or
-long long x = 65536;

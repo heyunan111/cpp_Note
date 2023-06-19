@@ -1,2 +1,0 @@
-cmake -B build [-DCMAKE_BUILD_TYPE=Release] [-G Nibja]
-cmake --build build --paralel 4

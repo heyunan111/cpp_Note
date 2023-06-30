@@ -1,4 +1,59 @@
+在C++中，有四种智能指针类型：unique_ptr、shared_ptr、weak_ptr和auto_ptr（在C++11中被删除）。
+
+其中，unique_ptr是实现独占拥有的智能指针，即同一时间内只有一个指针可以指向该对象。它的大小和
+开销与原生指针相似，并且实现简单。在析构时，unique_ptr会调用reset函数来释放资源，但它的实现
+并不保证线程安全。
+
+shared_ptr是实现共享拥有的智能指针，对象会在最后一个拥有该对象的指针被销毁后释放。它的大小是
+原生指针的两倍，因为它内部包含两个指针：一个指向资源，一个指向控制块。控制块包含引用计数、weak
+计数以及其他信息，如删除器和空间适配器等。shared_ptr是线程安全的，它的引用计数是通过原子操作来
+保证线程安全性的，但实际指向的资源是否线程安全需要根据具体情况来确定。在三种情况下，会构造控制
+块：从原始指针构造、使用make_shared和从独占指针构造（例如unique_ptr和auto_ptr）。应注意，将
+超过一个shared_ptr从原始指针构造时可能导致未定义行为。通常情况下，控制块是动态分配的，除非使
+用make_shared。
+
+weak_ptr不控制对象的生命周期，它指向一个shared_ptr对象。它通常与shared_ptr配合使用，可以通过
+检查weak_ptr是否过期来判断相关的shared_ptr是否有效。此外，weak_ptr还可以解决shared_ptr相互
+引用导致的死锁问题。尽管weak_ptr的大小与shared_ptr相同，但它没有重载解引用运算符，因此无法直
+接使用，只能通过weak_ptr构造shared_ptr来访问资源。
+
+在C++14中引入了make_unique函数，而在C++11中引入了make_shared和allocate_shared函数。这些make
+函数相对于直接使用new操作符的好处在于消除了代码重复，提高了异常安全性，并且生成的代码更小更快。
+make_shared会在一块内存中同时容纳对象和控制块，从而提升效率。而allocate_shared允许手动分配
+内存用于对象和控制块，相对于make_shared会有额外的内存分配和构造开销。需要注意的是，对于一些特
+殊情况，如自定义删除器或希望使用花括号初始化，不适合使用make函数。
+
+总之，C++的智能指针提供了不同的所有权管理方式，能够更安全地管理动态分配的资源，避免内存泄
+漏和悬空指针等问题。根据具体的使用场景和需求，选择合适的智能指针类型可以提高代码的可靠性和性能。
+
+
+
+
+
 C++中有四种智能指针:unique_ptr,shared_ptr,weak_ptr,auto_ptr(c++11中被删除)
+
+删除器
+
+unique_ptr：
+    大小，为什么
+    开销
+    实现简单
+    析构调用reset
+    线程不安全
+
+shared_ptr：
+    大小，为什么，控制块包含什么，控制块动态分配
+    开销
+    线程安全，为什么
+    3中情况一定会构造控制块
+    使用enable_shared_frome_this
+
+make_shared make_unique allocate_shared
+    C++多少引入的
+    unique_ptr实现
+    make_shared好处
+    allocate_shared
+
 
 删除器： unique_ptr shared_ptr 可以自定义删除器，默认删除器就是delete
 unique_ptr 的删除器是指针的一部分，这意味着我们无法将指向相同类型但删除器不同的unique_ptr放在同一个
